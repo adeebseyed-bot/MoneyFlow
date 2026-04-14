@@ -456,11 +456,11 @@ export default function BalanceSheet() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-3 md:p-8 font-sans selection:bg-primary/20 flex flex-col">
-      <div className="max-w-6xl mx-auto w-full space-y-4 md:space-y-8 flex-1 flex flex-col">
+    <div className="min-h-screen bg-background p-2 sm:p-4 md:p-8 font-sans selection:bg-primary/20 flex flex-col">
+      <div className="max-w-7xl mx-auto w-full space-y-4 md:space-y-8 flex-1 flex flex-col">
         
         {sheets.length > 0 && (
-          <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6">
+          <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6 px-1">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -468,14 +468,14 @@ export default function BalanceSheet() {
               className="space-y-1"
             >
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="p-2 md:p-3 bg-black rounded-xl md:rounded-2xl text-white shadow-lg shadow-black/20">
+                <div className="p-2 md:p-3 bg-black rounded-xl md:rounded-2xl text-white shadow-lg shadow-black/20 shrink-0">
                   <TableIcon size={24} className="md:w-8 md:h-8" />
                 </div>
-                <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">MoneyFlow</h1>
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground truncate">MoneyFlow</h1>
               </div>
             </motion.div>
 
-            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full lg:w-auto">
               <div className="hidden md:flex flex-col items-end mr-2">
                 <span className={cn(
                   "text-[10px] font-bold uppercase tracking-widest",
@@ -994,11 +994,11 @@ export default function BalanceSheet() {
                 <Table>
                   <TableHeader className="bg-surface-variant/10">
                     <TableRow className="hover:bg-transparent border-muted/30">
-                      <TableHead className="w-[120px] md:w-[180px] font-bold text-foreground py-3 md:py-6 text-xs md:text-base">Date</TableHead>
-                      <TableHead className="font-bold text-foreground py-3 md:py-6 text-xs md:text-base">Particulars</TableHead>
-                      <TableHead className="text-right font-bold text-foreground py-3 md:py-6 text-xs md:text-base">Credit (+)</TableHead>
-                      <TableHead className="text-right font-bold text-foreground py-3 md:py-6 text-xs md:text-base">Debit (-)</TableHead>
-                      <TableHead className="w-[80px] md:w-[120px] py-3 md:py-6"></TableHead>
+                      <TableHead className="w-[100px] md:w-[150px] font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Date</TableHead>
+                      <TableHead className="font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Particulars</TableHead>
+                      <TableHead className="text-right font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Credit (+)</TableHead>
+                      <TableHead className="text-right font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Debit (-)</TableHead>
+                      <TableHead className="w-[100px] md:w-[140px] py-4 md:py-6"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1037,8 +1037,8 @@ export default function BalanceSheet() {
                             <TableCell className="text-right py-3 md:py-5 text-destructive font-bold text-[clamp(0.7rem,2vw,1rem)] whitespace-nowrap">
                               {t.debit > 0 ? formatRupee(t.debit).replace('₹', '') : '-'}
                             </TableCell>
-                            <TableCell className="py-3 md:py-5">
-                              <div className="flex items-center gap-1 md:gap-2">
+                            <TableCell className="py-2 md:py-4 px-2">
+                              <div className="flex items-center justify-end gap-2 md:gap-3">
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
@@ -1046,17 +1046,17 @@ export default function BalanceSheet() {
                                     setTransactionToEdit(t);
                                     setIsEditDialogOpen(true);
                                   }}
-                                  className="md:opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg md:rounded-xl h-8 w-8 md:h-10 md:w-10"
+                                  className="transition-all text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-11 w-11 md:h-12 md:w-12 lg:opacity-0 lg:group-hover:opacity-100"
                                 >
-                                  <Edit2 size={14} className="md:w-[18px] md:h-[18px]" />
+                                  <Edit2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
                                   onClick={() => removeTransaction(t.id)}
-                                  className="md:opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg md:rounded-xl h-8 w-8 md:h-10 md:w-10"
+                                  className="transition-all text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl h-11 w-11 md:h-12 md:w-12 lg:opacity-0 lg:group-hover:opacity-100"
                                 >
-                                  <Trash2 size={14} className="md:w-[18px] md:h-[18px]" />
+                                  <Trash2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
                               </div>
                             </TableCell>
