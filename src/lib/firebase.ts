@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
@@ -88,6 +88,7 @@ testConnection();
 
 export { 
   signInWithPopup, 
+  signInWithRedirect,
   signOut, 
   onAuthStateChanged, 
   collection, 

@@ -69,6 +69,7 @@ import {
   db, 
   googleProvider, 
   signInWithPopup, 
+  signInWithRedirect,
   signOut, 
   onAuthStateChanged, 
   collection, 
@@ -213,6 +214,15 @@ export default function BalanceSheet() {
       } else {
         // Offline Save (Local Storage)
         localStorage.setItem('ledgerflow_current_session', JSON.stringify({ sheets, activeSheetId }));
+        
+        // Also add to history as requested
+        const sheetsWithTimestamp = sheets.map(s => ({
+          ...s,
+          savedAt: new Date().toISOString()
+        }));
+        const newHistory = [...sheetsWithTimestamp, ...savedSheets];
+        setSavedSheets(newHistory);
+        localStorage.setItem('ledgerflow_history', JSON.stringify(newHistory));
       }
       
       const now = new Date();
@@ -226,9 +236,17 @@ export default function BalanceSheet() {
 
   const handleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      // Using redirect as requested, but popup is often more reliable in iframes
+      // We'll try redirect first
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
       console.error("Sign in failed", error);
+      // Fallback to popup if redirect fails or is blocked
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (popupError) {
+        console.error("Popup sign in also failed", popupError);
+      }
     }
   };
 
