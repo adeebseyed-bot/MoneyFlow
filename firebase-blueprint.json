@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user-specific settings and profile information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Sheet": {
+      "title": "Ledger Sheet",
+      "description": "A single accounting sheet containing multiple transactions.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "date": { "type": "string" },
+              "particulars": { "type": "string" },
+              "debit": { "type": "number" },
+              "credit": { "type": "number" }
+            }
+          }
+        },
+        "adjustment": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["none", "add", "subtract", "divide", "percent", "override"] },
+            "value": { "type": "number" },
+            "colorPreference": { "type": "string" },
+            "iconPreference": { "type": "string" }
+          }
+        },
+        "savedAt": { "type": "string", "format": "date-time" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["name", "transactions", "ownerId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user profile data."
+    },
+    "/users/{userId}/sheets/{sheetId}": {
+      "schema": "Sheet",
+      "description": "User's individual ledger sheets."
+    }
+  }
+}
