@@ -477,10 +477,10 @@ export default function BalanceSheet() {
               </div>
             </motion.div>
 
-            <div className="flex items-center justify-end gap-1.5 md:gap-2 w-full lg:w-auto">
+            <div className="flex items-center justify-end gap-2 md:gap-3 w-full lg:w-auto">
               {user ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all relative group" />}>
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all relative group" />}>
                     <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center border border-primary/20">
                       {user.photoURL ? (
                         <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -488,9 +488,9 @@ export default function BalanceSheet() {
                         <UserIcon size={16} className="text-primary" />
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success border-2 border-background rounded-full" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success border-2 border-white rounded-full shadow-sm" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[200px] shadow-2xl border-none bg-white">
+                  <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[200px] shadow-2xl border-none bg-white/80 backdrop-blur-xl">
                     <div className="px-3 py-2 border-b border-muted mb-1">
                       <p className="text-xs font-bold text-foreground truncate">{user.displayName}</p>
                       <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
@@ -506,14 +506,14 @@ export default function BalanceSheet() {
                   onClick={handleSignIn}
                   variant="ghost"
                   size="icon"
-                  className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all text-primary"
+                  className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all text-primary"
                   title="Sign In / Go Online"
                 >
                   <LogIn size={20} />
                 </Button>
               )}
 
-              <div className="h-6 w-[1px] bg-muted mx-1 hidden sm:block" />
+              <div className="h-8 w-[1px] bg-muted/30 mx-1 hidden sm:block" />
 
               <Button 
                 onClick={handleSave}
@@ -521,8 +521,8 @@ export default function BalanceSheet() {
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all active:scale-95 relative",
-                  user ? "text-success hover:bg-success/10" : "text-secondary hover:bg-secondary/10"
+                  "rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all active:scale-95 relative",
+                  user ? "text-success" : "text-secondary"
                 )}
                 title={user ? 'Cloud Save' : 'Local Save'}
               >
@@ -532,7 +532,7 @@ export default function BalanceSheet() {
                   <Save size={20} />
                 )}
                 {lastSaved && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-success rounded-full border border-background" />
+                  <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-white shadow-sm" />
                 )}
               </Button>
 
@@ -540,27 +540,27 @@ export default function BalanceSheet() {
                 onClick={handleAddSheet}
                 variant="ghost"
                 size="icon"
-                className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all active:scale-95 text-primary"
+                className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all active:scale-95 text-primary"
                 title="Add New Sheet"
               >
-                <Plus size={22} />
+                <Plus size={24} />
               </Button>
 
               <Button 
                 onClick={() => setIsHistoryDialogOpen(true)}
                 variant="ghost"
                 size="icon"
-                className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+                className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all active:scale-95 text-muted-foreground"
                 title="View History"
               >
                 <History size={20} />
               </Button>
 
               <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all text-muted-foreground" />}>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all text-muted-foreground" />}>
                   <Download size={20} />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
+                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none bg-white/80 backdrop-blur-xl">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 py-1">Export As</p>
                   <DropdownMenuItem onClick={() => exportToPDF(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
                     <FileText size={18} className="text-red-500" />
@@ -578,10 +578,10 @@ export default function BalanceSheet() {
               </DropdownMenu>
 
               <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all text-muted-foreground" />}>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full h-10 w-10 md:h-12 md:w-12 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg hover:bg-white/60 hover:scale-110 transition-all text-muted-foreground" />}>
                   <Share2 size={20} />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
+                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none bg-white/80 backdrop-blur-xl">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 py-1">Share Sheet</p>
                   <DropdownMenuItem onClick={() => handleShare('pdf')} className="rounded-xl gap-3 py-3 cursor-pointer">
                     <Share2 size={18} className="text-primary" />
@@ -662,7 +662,7 @@ export default function BalanceSheet() {
                         setSheetToRename({ id: sheet.id, name: sheet.name });
                         setIsRenameDialogOpen(true);
                       }}
-                      className="absolute -top-2 -left-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-1.5 text-primary hover:scale-110 transition-all active:scale-90 flex items-center justify-center"
+                      className="absolute -top-2 -left-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-2 text-primary hover:scale-110 transition-all active:scale-90 flex items-center justify-center border-2 border-white"
                       title="Rename Sheet"
                     >
                       <Edit2 size={12} />
@@ -672,7 +672,7 @@ export default function BalanceSheet() {
                         e.stopPropagation();
                         handleDeleteSheet(sheet.id);
                       }}
-                      className="absolute -top-2 -right-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-1.5 text-destructive hover:scale-110 transition-all active:scale-90 flex items-center justify-center"
+                      className="absolute -top-2 -right-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-2 text-destructive hover:scale-110 transition-all active:scale-90 flex items-center justify-center border-2 border-white"
                       title="Delete Sheet"
                     >
                       <Trash2 size={12} />
@@ -1029,7 +1029,7 @@ export default function BalanceSheet() {
                                     setTransactionToEdit(t);
                                     setIsEditDialogOpen(true);
                                   }}
-                                  className="transition-all text-primary bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-xl h-11 w-11 md:h-12 md:w-12 shadow-lg"
+                                  className="transition-all text-primary bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-full h-11 w-11 md:h-12 md:w-12 shadow-lg hover:scale-110 active:scale-95"
                                 >
                                   <Edit2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
@@ -1037,7 +1037,7 @@ export default function BalanceSheet() {
                                   variant="ghost" 
                                   size="icon" 
                                   onClick={() => removeTransaction(t.id)}
-                                  className="transition-all text-destructive bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-xl h-11 w-11 md:h-12 md:w-12 shadow-lg"
+                                  className="transition-all text-destructive bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-full h-11 w-11 md:h-12 md:w-12 shadow-lg hover:scale-110 active:scale-95"
                                 >
                                   <Trash2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
