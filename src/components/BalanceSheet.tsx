@@ -215,14 +215,17 @@ export default function BalanceSheet() {
         // Offline Save (Local Storage)
         localStorage.setItem('ledgerflow_current_session', JSON.stringify({ sheets, activeSheetId }));
         
-        // Also add to history as requested
-        const sheetsWithTimestamp = sheets.map(s => ({
-          ...s,
-          savedAt: new Date().toISOString()
-        }));
-        const newHistory = [...sheetsWithTimestamp, ...savedSheets];
-        setSavedSheets(newHistory);
-        localStorage.setItem('ledgerflow_history', JSON.stringify(newHistory));
+        // Also add to history as requested (saving active sheet snapshot)
+        const activeSheetToSave = sheets.find(s => s.id === activeSheetId) || sheets[0];
+        if (activeSheetToSave) {
+          const snapshot = {
+            ...activeSheetToSave,
+            savedAt: new Date().toISOString()
+          };
+          const newHistory = [snapshot, ...savedSheets.slice(0, 19)];
+          setSavedSheets(newHistory);
+          localStorage.setItem('ledgerflow_history', JSON.stringify(newHistory));
+        }
       }
       
       const now = new Date();
@@ -236,16 +239,15 @@ export default function BalanceSheet() {
 
   const handleSignIn = async () => {
     try {
-      // Using redirect as requested, but popup is often more reliable in iframes
-      // We'll try redirect first
-      await signInWithRedirect(auth, googleProvider);
+      // Using popup as it's much faster and more reliable in this environment
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Sign in failed", error);
-      // Fallback to popup if redirect fails or is blocked
+      // Fallback to redirect if popup is blocked
       try {
-        await signInWithPopup(auth, googleProvider);
-      } catch (popupError) {
-        console.error("Popup sign in also failed", popupError);
+        await signInWithRedirect(auth, googleProvider);
+      } catch (redirectError) {
+        console.error("Redirect sign in also failed", redirectError);
       }
     }
   };
@@ -261,7 +263,7 @@ export default function BalanceSheet() {
   };
 
   const activeSheet = useMemo(() => 
-    sheets.find(s => s.id === activeSheetId) || sheets[0], 
+    sheets.length > 0 ? (sheets.find(s => s.id === activeSheetId) || sheets[0]) : null, 
   [sheets, activeSheetId]);
 
   const totals = useMemo(() => {
@@ -456,7 +458,7 @@ export default function BalanceSheet() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 md:p-8 font-sans selection:bg-primary/20 flex flex-col">
+    <div className="min-h-screen bg-background p-2 sm:p-4 md:p-8 font-sans selection:bg-primary/20 flex flex-col select-none">
       <div className="max-w-7xl mx-auto w-full space-y-4 md:space-y-8 flex-1 flex flex-col">
         
         {sheets.length > 0 && (
@@ -475,33 +477,18 @@ export default function BalanceSheet() {
               </div>
             </motion.div>
 
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full lg:w-auto">
-              <div className="hidden md:flex flex-col items-end mr-2">
-                <span className={cn(
-                  "text-[10px] font-bold uppercase tracking-widest",
-                  user ? "text-success" : "text-secondary"
-                )}>
-                  {user ? 'Online Mode' : 'Offline Mode'}
-                </span>
-                <span className="text-[9px] text-muted-foreground">
-                  {user ? 'Syncing to Cloud' : 'Saving to Device'}
-                </span>
-              </div>
-
+            <div className="flex items-center justify-end gap-1.5 md:gap-2 w-full lg:w-auto">
               {user ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="outline" className="rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-4 gap-2 border-2 border-primary/20 hover:bg-primary/5 transition-all" />}>
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all relative group" />}>
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center border border-primary/20">
                       {user.photoURL ? (
                         <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         <UserIcon size={16} className="text-primary" />
                       )}
                     </div>
-                    <span className="hidden sm:inline text-xs md:text-sm font-medium max-w-[100px] truncate">
-                      {user.displayName || 'Account'}
-                    </span>
-                    <ChevronDown size={14} className="text-muted-foreground" />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success border-2 border-background rounded-full" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[200px] shadow-2xl border-none bg-white">
                     <div className="px-3 py-2 border-b border-muted mb-1">
@@ -517,99 +504,91 @@ export default function BalanceSheet() {
               ) : (
                 <Button 
                   onClick={handleSignIn}
-                  variant="outline"
-                  className="rounded-xl md:rounded-2xl h-10 md:h-14 px-4 md:px-6 gap-2 border-2 border-primary/20 hover:bg-primary/5 transition-all text-xs md:text-sm font-bold"
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all text-primary"
+                  title="Sign In / Go Online"
                 >
-                  <LogIn size={18} className="text-primary" />
-                  <div className="flex flex-col items-start leading-tight">
-                    <span>Sign In</span>
-                    <span className="text-[8px] opacity-60 font-medium uppercase">Go Online</span>
-                  </div>
+                  <LogIn size={20} />
                 </Button>
               )}
+
+              <div className="h-6 w-[1px] bg-muted mx-1 hidden sm:block" />
 
               <Button 
                 onClick={handleSave}
                 disabled={isSaving || sheets.length === 0}
+                variant="ghost"
+                size="icon"
                 className={cn(
-                  "rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-6 gap-1 md:gap-2 shadow-md md:shadow-xl transition-all active:scale-95 flex-1 md:flex-none font-bold",
-                  user ? "bg-success hover:bg-success/90 text-white" : "bg-secondary hover:bg-secondary/90 text-white"
+                  "rounded-xl h-10 w-10 md:h-12 md:w-12 transition-all active:scale-95 relative",
+                  user ? "text-success hover:bg-success/10" : "text-secondary hover:bg-secondary/10"
                 )}
+                title={user ? 'Cloud Save' : 'Local Save'}
               >
                 {isSaving ? (
-                  <RefreshCcw className="animate-spin" size={18} />
+                  <RefreshCcw className="animate-spin" size={20} />
                 ) : (
-                  <Save size={18} />
+                  <Save size={20} />
                 )}
-                <div className="flex flex-col items-start leading-tight">
-                  <span>{user ? 'Cloud Save' : 'Local Save'}</span>
-                  {lastSaved ? (
-                    <span className="text-[8px] opacity-70 font-medium uppercase tracking-tighter">Saved {lastSaved}</span>
-                  ) : (
-                    <span className="text-[8px] opacity-70 font-medium uppercase tracking-tighter">Not Saved</span>
-                  )}
-                </div>
+                {lastSaved && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-success rounded-full border border-background" />
+                )}
               </Button>
 
               <Button 
                 onClick={handleAddSheet}
-                size="sm"
-                className="rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-6 gap-1 md:gap-2 shadow-md md:shadow-xl hover:scale-105 transition-all active:scale-95 bg-primary text-primary-foreground text-xs md:text-base flex-1 md:flex-none"
+                variant="ghost"
+                size="icon"
+                className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-primary/10 transition-all active:scale-95 text-primary"
+                title="Add New Sheet"
               >
-                <Plus size={16} className="md:w-5 md:h-5" />
-                <span>Add Sheet</span>
+                <Plus size={22} />
               </Button>
 
               <Button 
                 onClick={() => setIsHistoryDialogOpen(true)}
-                variant="secondary"
-                size="sm"
-                className="rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-6 gap-1 md:gap-2 shadow-sm hover:scale-105 transition-all active:scale-95 text-xs md:text-base flex-1 md:flex-none"
+                variant="ghost"
+                size="icon"
+                className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all active:scale-95 text-muted-foreground"
+                title="View History"
               >
-                <History size={16} className="md:w-5 md:h-5" />
-                <span>History</span>
+                <History size={20} />
               </Button>
 
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-6 gap-1 md:gap-2 border-2 border-primary/20 hover:bg-primary/5 transition-all text-xs md:text-base flex-1" />}>
-                    <Download size={16} className="md:w-5 md:h-5" />
-                    <span>Export</span>
-                    <ChevronDown size={14} className="opacity-50 md:w-4 md:h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
-                    <DropdownMenuItem onClick={() => exportToPDF(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
-                      <FileText size={18} className="text-red-500" />
-                      <span>Download PDF</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => exportToExcel(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
-                      <FileSpreadsheet size={18} className="text-green-600" />
-                      <span>Download Excel</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => exportToWord(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
-                      <FileText size={18} className="text-blue-600" />
-                      <span>Download Word</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all text-muted-foreground" />}>
+                  <Download size={20} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 py-1">Export As</p>
+                  <DropdownMenuItem onClick={() => exportToPDF(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
+                    <FileText size={18} className="text-red-500" />
+                    <span>PDF Document</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportToExcel(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
+                    <FileSpreadsheet size={18} className="text-green-600" />
+                    <span>Excel Sheet</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportToWord(activeSheet.transactions, totals, activeSheet.name)} className="rounded-xl gap-3 py-3 cursor-pointer">
+                    <FileText size={18} className="text-blue-600" />
+                    <span>Word Doc</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="rounded-xl md:rounded-2xl h-10 md:h-14 px-3 md:px-6 gap-1 md:gap-2 shadow-sm hover:scale-105 transition-all active:scale-95 text-xs md:text-base flex-1" />}>
-                    <Share2 size={16} className="md:w-5 md:h-5" />
-                    <span>Share</span>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
-                    <DropdownMenuItem onClick={() => handleShare('pdf')} className="rounded-xl gap-3 py-3 cursor-pointer">
-                      <FileText size={18} />
-                      <span>Share as PDF</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('word')} className="rounded-xl gap-3 py-3 cursor-pointer">
-                      <FileText size={18} />
-                      <span>Share as Word</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 md:h-12 md:w-12 hover:bg-muted transition-all text-muted-foreground" />}>
+                  <Share2 size={20} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[180px] shadow-2xl border-none">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 py-1">Share Sheet</p>
+                  <DropdownMenuItem onClick={() => handleShare('pdf')} className="rounded-xl gap-3 py-3 cursor-pointer">
+                    <Share2 size={18} className="text-primary" />
+                    <span>Share Link</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
         )}
@@ -660,41 +639,45 @@ export default function BalanceSheet() {
         ) : (
           <>
             {/* Sheets Navigation */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <div className="flex items-center bg-surface-variant/30 p-1 rounded-2xl">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-2 no-scrollbar px-1">
+          <div className="flex items-center bg-surface-variant/30 p-1.5 rounded-2xl">
             {sheets.map(sheet => (
-              <div key={sheet.id} className="relative group">
+              <div key={sheet.id} className="relative group px-1">
                 <Button
                   variant={activeSheetId === sheet.id ? "default" : "ghost"}
                   onClick={() => setActiveSheetId(sheet.id)}
                   className={cn(
-                    "rounded-xl px-4 py-2 h-10 gap-2 transition-all",
-                    activeSheetId === sheet.id ? "shadow-md" : "hover:bg-primary/10"
+                    "rounded-xl px-5 py-2 h-11 gap-2 transition-all relative",
+                    activeSheetId === sheet.id ? "shadow-md scale-105 z-0" : "hover:bg-primary/10 opacity-70"
                   )}
                 >
-                  <Layers size={16} />
-                  <span>{sheet.name}</span>
+                  <Layers size={18} />
+                  <span className="font-bold">{sheet.name}</span>
                 </Button>
                 {activeSheetId === sheet.id && (
-                  <div className="absolute -top-1 -right-1 flex gap-1">
+                  <>
                     <button 
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSheetToRename({ id: sheet.id, name: sheet.name });
                         setIsRenameDialogOpen(true);
                       }}
-                      className="bg-white shadow-md rounded-full p-1 text-primary hover:scale-110 transition-transform"
+                      className="absolute -top-2 -left-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-1.5 text-primary hover:scale-110 transition-all active:scale-90 flex items-center justify-center"
                       title="Rename Sheet"
                     >
-                      <Edit2 size={10} />
+                      <Edit2 size={12} />
                     </button>
                     <button 
-                      onClick={() => handleDeleteSheet(sheet.id)}
-                      className="bg-white shadow-md rounded-full p-1 text-destructive hover:scale-110 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSheet(sheet.id);
+                      }}
+                      className="absolute -top-2 -right-1 z-30 bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-full p-1.5 text-destructive hover:scale-110 transition-all active:scale-90 flex items-center justify-center"
                       title="Delete Sheet"
                     >
-                      <Trash2 size={10} />
+                      <Trash2 size={12} />
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             ))}
@@ -712,7 +695,7 @@ export default function BalanceSheet() {
             <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-lg md:shadow-xl bg-success text-success-foreground overflow-hidden cursor-default">
               <CardHeader className="p-4 md:pb-2">
                 <CardDescription className="text-success-foreground/70 font-medium uppercase tracking-wider text-[10px] md:text-xs">Total Credit (+)</CardDescription>
-                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap">
+                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap select-text">
                   {formatRupee(totals.credit)}
                 </CardTitle>
               </CardHeader>
@@ -729,7 +712,7 @@ export default function BalanceSheet() {
             <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-lg md:shadow-xl bg-destructive text-destructive-foreground overflow-hidden group cursor-default">
               <CardHeader className="p-4 md:pb-2">
                 <CardDescription className="text-destructive-foreground/70 font-medium uppercase tracking-wider text-[10px] md:text-xs">Total Debit (-)</CardDescription>
-                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap">
+                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap select-text">
                   {formatRupee(totals.debit)}
                 </CardTitle>
               </CardHeader>
@@ -862,27 +845,27 @@ export default function BalanceSheet() {
                         )}
                         {activeSheet?.adjustment?.type !== 'none' && (
                           <div className="pt-2 border-t border-muted">
-                            <p className="text-[10px] text-muted-foreground">Original: {formatRupee(totals.rawBalance)}</p>
+                            <p className="text-[10px] text-muted-foreground select-none">Original: <span className="select-text">{formatRupee(totals.rawBalance)}</span></p>
                           </div>
                         )}
                       </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap">
+                <CardTitle className="text-xl md:text-3xl font-bold flex items-center gap-2 text-[clamp(1rem,4vw,1.875rem)] whitespace-nowrap select-text">
                   {activeSheet?.adjustment?.iconPreference === 'up' && <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6" />}
                   {activeSheet?.adjustment?.iconPreference === 'down' && <ArrowDownLeft className="w-5 h-5 md:w-6 md:h-6" />}
                   {activeSheet?.adjustment?.iconPreference === 'dollar' && <IndianRupee className="w-5 h-5 md:w-6 md:h-6" />}
                   {activeSheet?.adjustment?.iconPreference === 'wallet' && <Layers className="w-5 h-5 md:w-6 md:h-6" />}
                   {formatRupee(totals.balance).replace('INR', '').trim()}
                   {totals.adjustmentAmount !== 0 && (
-                    <span className="text-[10px] md:text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Adjusted</span>
+                    <span className="text-[10px] md:text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium select-none">Adjusted</span>
                   )}
                 </CardTitle>
                 {totals.adjustmentAmount !== 0 && (
-                  <div className="text-[10px] md:text-xs text-white/70 font-medium mt-1 flex items-center gap-1">
+                  <div className="text-[10px] md:text-xs text-white/70 font-medium mt-1 flex items-center gap-1 select-none">
                     <span>{totals.adjustmentAmount > 0 ? 'Added' : 'Deducted'}:</span>
-                    <span className="font-bold">{formatRupee(Math.abs(totals.adjustmentAmount))}</span>
+                    <span className="font-bold select-text">{formatRupee(Math.abs(totals.adjustmentAmount))}</span>
                     {activeSheet?.adjustment?.type === 'percent' && (
                       <span className="opacity-60">({activeSheet.adjustment.value}%)</span>
                     )}
@@ -998,7 +981,7 @@ export default function BalanceSheet() {
                       <TableHead className="font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Particulars</TableHead>
                       <TableHead className="text-right font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Credit (+)</TableHead>
                       <TableHead className="text-right font-bold text-foreground py-4 md:py-6 text-xs md:text-base">Debit (-)</TableHead>
-                      <TableHead className="w-[100px] md:w-[140px] py-4 md:py-6"></TableHead>
+                      <TableHead className="w-[120px] md:w-[140px] py-4 md:py-6"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1031,10 +1014,10 @@ export default function BalanceSheet() {
                                 {t.particulars}
                               </div>
                             </TableCell>
-                            <TableCell className="text-right py-3 md:py-5 text-success font-bold text-[clamp(0.7rem,2vw,1rem)] whitespace-nowrap">
+                            <TableCell className="text-right py-3 md:py-5 text-success font-bold text-[clamp(0.7rem,2vw,1rem)] whitespace-nowrap select-text">
                               {t.credit > 0 ? formatRupee(t.credit).replace('₹', '') : '-'}
                             </TableCell>
-                            <TableCell className="text-right py-3 md:py-5 text-destructive font-bold text-[clamp(0.7rem,2vw,1rem)] whitespace-nowrap">
+                            <TableCell className="text-right py-3 md:py-5 text-destructive font-bold text-[clamp(0.7rem,2vw,1rem)] whitespace-nowrap select-text">
                               {t.debit > 0 ? formatRupee(t.debit).replace('₹', '') : '-'}
                             </TableCell>
                             <TableCell className="py-2 md:py-4 px-2">
@@ -1046,7 +1029,7 @@ export default function BalanceSheet() {
                                     setTransactionToEdit(t);
                                     setIsEditDialogOpen(true);
                                   }}
-                                  className="transition-all text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl h-11 w-11 md:h-12 md:w-12 lg:opacity-0 lg:group-hover:opacity-100"
+                                  className="transition-all text-primary bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-xl h-11 w-11 md:h-12 md:w-12 shadow-lg"
                                 >
                                   <Edit2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
@@ -1054,7 +1037,7 @@ export default function BalanceSheet() {
                                   variant="ghost" 
                                   size="icon" 
                                   onClick={() => removeTransaction(t.id)}
-                                  className="transition-all text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl h-11 w-11 md:h-12 md:w-12 lg:opacity-0 lg:group-hover:opacity-100"
+                                  className="transition-all text-destructive bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 rounded-xl h-11 w-11 md:h-12 md:w-12 shadow-lg"
                                 >
                                   <Trash2 size={20} className="md:w-6 md:h-6" />
                                 </Button>
@@ -1068,10 +1051,10 @@ export default function BalanceSheet() {
                   <TableFooter className="bg-surface-variant/20 border-t-2 border-muted/30">
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={2} className="py-4 md:py-8 text-sm md:text-xl font-bold text-foreground">Total Balance</TableCell>
-                      <TableCell className="text-right py-4 md:py-8 text-sm md:text-2xl font-black text-success text-[clamp(0.8rem,3vw,1.5rem)] whitespace-nowrap">
+                      <TableCell className="text-right py-4 md:py-8 text-sm md:text-2xl font-black text-success text-[clamp(0.8rem,3vw,1.5rem)] whitespace-nowrap select-text">
                         {formatRupee(totals.credit)}
                       </TableCell>
-                      <TableCell className="text-right py-4 md:py-8 text-sm md:text-2xl font-black text-destructive text-[clamp(0.8rem,3vw,1.5rem)] whitespace-nowrap">
+                      <TableCell className="text-right py-4 md:py-8 text-sm md:text-2xl font-black text-destructive text-[clamp(0.8rem,3vw,1.5rem)] whitespace-nowrap select-text">
                         {formatRupee(totals.debit)}
                       </TableCell>
                       <TableCell className="py-4 md:py-8"></TableCell>
@@ -1195,23 +1178,23 @@ export default function BalanceSheet() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
                       <Button 
-                        variant="ghost" 
+                        variant="secondary" 
                         size="sm" 
                         onClick={() => restoreFromHistory(sheet)}
-                        className="rounded-xl h-8 md:h-10 gap-1 md:gap-2 hover:bg-primary hover:text-primary-foreground text-xs md:text-sm"
+                        className="rounded-xl h-10 md:h-11 px-4 gap-2 hover:bg-primary hover:text-primary-foreground text-xs md:text-sm font-bold shadow-sm"
                       >
-                        <Plus size={14} />
+                        <Plus size={16} />
                         Restore
                       </Button>
                       <Button 
-                        variant="ghost" 
+                        variant="secondary" 
                         size="icon" 
                         onClick={() => deleteFromHistory(sheet.id)}
-                        className="rounded-xl h-8 w-8 md:h-10 md:w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="rounded-xl h-10 w-10 md:h-11 md:w-11 text-destructive hover:bg-destructive/10 shadow-sm"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </Button>
                     </div>
                   </div>
